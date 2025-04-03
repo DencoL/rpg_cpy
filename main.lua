@@ -4,63 +4,50 @@ local love = require("love")
 function love.load()
     tile = love.graphics.newImage("tile.png")
 
-    player = {
-        texture = love.graphics.newImage("player.png"),
-        x = 0,
-        y = 0,
-        previous_x = 0,
-        previous_y = 0,
-        moving = false,
-        moving_direction = ""
-    }
-
     tile_width = tile:getWidth()
     tile_height = tile:getHeight()
     screen_width = love.graphics.getWidth()
     screen_height = love.graphics.getHeight()
     screen_x_center = screen_width / 2
     screen_y_center = screen_height / 2
+
+    local player_iso_x, player_iso_y = toIsometric(0, 0, tile_width, tile_height)
+
+    player = {
+        texture = love.graphics.newImage("player.png"),
+        x = 0,
+        y = 0,
+        target_x = 0,
+        target_y = 0,
+        iso_x = player_iso_x,
+        iso_y = player_iso_y,
+        moving = false,
+        speed = 50
+    }
+
 end
 
 function love.update(dt)
     if player.moving then
-        if player.moving_direction == "left" and player.x <= player.previous_x - 1 then
-            player.moving = false
-        elseif player.moving_direction == "right" and player.x >= player.previous_x + 1 then
-            player.moving = false
-        elseif player.moving_direction == "down" and player.y >= player.previous_y + 1 then
-            player.moving = false
-        elseif player.moving_direction == "up" and player.y <= player.previous_y - 1 then
-            player.moving = false
-        end
+        local target_iso_x, target_iso_y = toIsometric(player.target_x, player.target_y, tile_width, tile_height)
 
-        local speed = 1.5
-        if player.moving_direction == "left" then
-            player.x = player.x - speed * dt
-        elseif player.moving_direction == "right" then
-            player.x = player.x + speed * dt
-        elseif player.moving_direction == "down" then
-            player.y = player.y + speed * dt
-        elseif player.moving_direction == "up" then
-            player.y = player.y - speed * dt
-        end
-    else
-        if love.keyboard.isDown("left") then
-            player.moving_direction = "left"
-            player.moving = true
-        elseif love.keyboard.isDown("right") then
-            player.moving_direction = "right"
-            player.moving = true
-        elseif love.keyboard.isDown("down") then
-            player.moving_direction = "down"
-            player.moving = true
-        elseif love.keyboard.isDown("up") then
-            player.moving_direction = "up"
-            player.moving = true
-        end
+        local dx = target_iso_x - player.iso_x
+        local dy = target_iso_y - player.iso_y
+        local dist = math.sqrt(dx * dx + dy * dy)
 
-        player.previous_x = player.x
-        player.previous_y = player.y
+        if dist > 1 then
+            local move_x = (dx / dist) * player.speed * dt
+            local move_y = (dy / dist) * player.speed * dt
+
+            player.iso_x = player.iso_x + move_x
+            player.iso_y = player.iso_y + move_y
+        else
+            player.iso_x = target_iso_x
+            player.iso_y = target_iso_y
+            player.x = player.target_x
+            player.y = player.target_y
+            player.moving = false
+        end
     end
 end
 
@@ -77,14 +64,27 @@ function love.draw()
         end
     end
 
-    local transformed_player_x, transformed_player_y = toIsometric(player.x, player.y, tile_width, tile_height)
-    love.graphics.draw(player.texture, transformed_player_x + (tile_width / 2) - (player.texture:getWidth() / 2), transformed_player_y - tile:getHeight() / 3)
+    love.graphics.draw(player.texture, player.iso_x + (tile_width / 2) - (player.texture:getWidth() / 2), player.iso_y - tile:getHeight() / 3)
 end
 
 
 function love.keypressed(key)
     if key == "q" then
         love.event.quit()
+    end
+
+    if not player.moving then
+        if love.keyboard.isDown("left") then
+            player.target_x = player.x - 1
+        elseif love.keyboard.isDown("right") then
+            player.target_x = player.x + 1
+        elseif love.keyboard.isDown("down") then
+            player.target_y = player.y + 1
+        elseif love.keyboard.isDown("up") then
+            player.target_y = player.y - 1
+        end
+
+        player.moving = true
     end
 end
 
