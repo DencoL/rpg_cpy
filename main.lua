@@ -1,30 +1,36 @@
 --- @class love
 local love = require("love")
 
+local Player = require("player")
+
+local tile
+local tile_width
+local tile_height
+local screen_width
+local screen_x_center
+local speed_multiplier
+
+local player
+
+local function toIsometric(x, y, tileWidth, tileHeight)
+    local isoX = (x - y) * (tileWidth / 2)
+    local isoY = (x + y) * (tileHeight / 2)
+
+    return isoX + screen_x_center - tileWidth, isoY + 100
+end
+
 function love.load()
-    tile = love.graphics.newImage("tile.png")
+    tile = love.graphics.newImage("assets/tile.png")
 
     tile_width = tile:getWidth()
     tile_height = tile:getHeight()
     screen_width = love.graphics.getWidth()
-    screen_height = love.graphics.getHeight()
     screen_x_center = screen_width / 2
-    screen_y_center = screen_height / 2
+    speed_multiplier = 50
 
     local player_iso_x, player_iso_y = toIsometric(0, 0, tile_width, tile_height)
 
-    player = {
-        texture = love.graphics.newImage("player.png"),
-        x = 0,
-        y = 0,
-        target_x = 0,
-        target_y = 0,
-        iso_x = player_iso_x,
-        iso_y = player_iso_y,
-        moving = false,
-        speed = 50
-    }
-
+    player = Player(0, 0, player_iso_x, player_iso_y)
 end
 
 function love.update(dt)
@@ -36,8 +42,8 @@ function love.update(dt)
         local dist = math.sqrt(dx * dx + dy * dy)
 
         if dist > 1 then
-            local move_x = (dx / dist) * player.speed * dt
-            local move_y = (dy / dist) * player.speed * dt
+            local move_x = (dx / dist) * player.speed * speed_multiplier * dt
+            local move_y = (dy / dist) * player.speed * speed_multiplier * dt
 
             player.iso_x = player.iso_x + move_x
             player.iso_y = player.iso_y + move_y
@@ -59,12 +65,14 @@ function love.draw()
             local x = i
             local y = j
 
-            local transformed_x, transformed_y = toIsometric(x, y, tile_width, tile_height)
-            love.graphics.draw(tile, transformed_x, transformed_y)
+            local iso_x, iso_y = toIsometric(x, y, tile_width, tile_height)
+            love.graphics.draw(tile, iso_x, iso_y)
         end
     end
 
-    love.graphics.draw(player.texture, player.iso_x + (tile_width / 2) - (player.texture:getWidth() / 2), player.iso_y - tile:getHeight() / 3)
+    local x_offset = (tile_width / 2) - (player.image:getWidth() / 2)
+    local y_offset = tile:getHeight() / 3
+    love.graphics.draw(player.image, player.iso_x + x_offset, player.iso_y - y_offset)
 end
 
 
@@ -86,11 +94,4 @@ function love.keypressed(key)
 
         player.moving = true
     end
-end
-
-function toIsometric(x, y, tileWidth, tileHeight)
-    local isoX = (x - y) * (tileWidth / 2)
-    local isoY = (x + y) * (tileHeight / 2)
-
-    return isoX + screen_x_center - tileWidth, isoY + 100
 end
