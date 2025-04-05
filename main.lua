@@ -4,6 +4,7 @@ local love = require("love")
 local Player = require("player")
 
 local tile
+local stone
 local tile_width
 local tile_height
 local screen_width
@@ -21,6 +22,7 @@ end
 
 function love.load()
     tile = love.graphics.newImage("assets/tile.png")
+    stone = love.graphics.newImage("assets/stone.png")
 
     tile_width = tile:getWidth()
     tile_height = tile:getHeight()
@@ -57,6 +59,16 @@ function love.update(dt)
     end
 end
 
+local function drawCenteredOnTile(image, iso_x, iso_y, extra_y_offset)
+    local x_offset = (tile_width / 2) - (image:getWidth() / 2)
+    local y_offset = tile:getHeight() / 3 + (extra_y_offset or 0)
+
+    local draw_x = iso_x + x_offset
+    local draw_y = iso_y - y_offset
+
+    love.graphics.draw(image, draw_x, draw_y)
+end
+
 function love.draw()
     local tiles_count = 5
 
@@ -67,12 +79,16 @@ function love.draw()
 
             local iso_x, iso_y = toIsometric(x, y, tile_width, tile_height)
             love.graphics.draw(tile, iso_x, iso_y)
+
+            if i == 1 and j == 1
+                or i == 2 and j == 0
+                or i == 0 and j == 3 then
+                drawCenteredOnTile(stone, iso_x, iso_y, -5)
+            end
         end
     end
 
-    local x_offset = (tile_width / 2) - (player.image:getWidth() / 2)
-    local y_offset = tile:getHeight() / 3
-    love.graphics.draw(player.image, player.iso_x + x_offset, player.iso_y - y_offset)
+    drawCenteredOnTile(player.image, player.iso_x, player.iso_y)
 end
 
 
