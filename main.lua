@@ -12,6 +12,7 @@ local screen_x_center
 local speed_multiplier
 
 local player
+local map
 
 local function toIsometric(x, y, tileWidth, tileHeight)
     local isoX = (x - y) * (tileWidth / 2)
@@ -30,9 +31,16 @@ function love.load()
     screen_x_center = screen_width / 2
     speed_multiplier = 50
 
-    local player_iso_x, player_iso_y = toIsometric(0, 0, tile_width, tile_height)
+    local player_iso_x, player_iso_y = toIsometric(1, 1, tile_width, tile_height)
 
     player = Player(0, 0, player_iso_x, player_iso_y)
+    map = {
+        {0, 0, 1, 0, 0},
+        {0, 1, 0, 0, 0},
+        {0, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0},
+    }
 end
 
 function love.update(dt)
@@ -70,19 +78,13 @@ local function drawCenteredOnTile(image, iso_x, iso_y, extra_y_offset)
 end
 
 function love.draw()
-    local tiles_count = 5
+    for x, row in ipairs(map) do
+        for y, column in pairs(row) do
 
-    for i = 0, tiles_count - 1 do
-        for j = 0, tiles_count - 1 do
-            local x = i
-            local y = j
-
-            local iso_x, iso_y = toIsometric(x, y, tile_width, tile_height)
+            local iso_x, iso_y = toIsometric(y, x, tile_width, tile_height)
             love.graphics.draw(tile, iso_x, iso_y)
 
-            if i == 1 and j == 1
-                or i == 2 and j == 0
-                or i == 0 and j == 3 then
+            if column == 1 then
                 drawCenteredOnTile(stone, iso_x, iso_y, -5)
             end
         end
