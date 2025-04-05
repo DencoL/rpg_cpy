@@ -3,33 +3,28 @@ local love = require("love")
 local lume = require("utils.lume")
 
 local Player = require("player")
+local Config = require("config")
 
-local tile_width
-local tile_height
 local screen_width
 local screen_x_center
-local speed_multiplier
 
 local player
 local map
 
-local function toIsometric(x, y, tileWidth, tileHeight)
-    local isoX = (x - y) * (tileWidth / 2)
-    local isoY = (x + y) * (tileHeight / 2)
+local function toIsometric(x, y)
+    local isoX = (x - y) * (Config.tile_width / 2)
+    local isoY = (x + y) * (Config.tile_height / 2)
 
-    return isoX + screen_x_center - tileWidth, isoY + 100
+    return isoX + screen_x_center - Config.tile_width, isoY + 100
 end
 
 function love.load()
-    tile_width = 92
-    tile_height = 46
     screen_width = love.graphics.getWidth()
     screen_x_center = screen_width / 2
-    speed_multiplier = 50
 
     local player_start_x = 1
     local player_start_y = 1
-    local player_iso_x, player_iso_y = toIsometric(player_start_x, player_start_y, tile_width, tile_height)
+    local player_iso_x, player_iso_y = toIsometric(player_start_x, player_start_y)
 
     player = Player(player_start_x, player_start_y, player_iso_x, player_iso_y)
 
@@ -38,15 +33,15 @@ end
 
 function love.update(dt)
     if player.moving then
-        local target_iso_x, target_iso_y = toIsometric(player.target_x, player.target_y, tile_width, tile_height)
+        local target_iso_x, target_iso_y = toIsometric(player.target_x, player.target_y)
 
         local dx = target_iso_x - player.iso_x
         local dy = target_iso_y - player.iso_y
         local dist = math.sqrt(dx * dx + dy * dy)
 
         if dist > 1 then
-            local move_x = (dx / dist) * player.speed * speed_multiplier * dt
-            local move_y = (dy / dist) * player.speed * speed_multiplier * dt
+            local move_x = (dx / dist) * player.speed * Config.player_speed_multiplier * dt
+            local move_y = (dy / dist) * player.speed * Config.player_speed_multiplier * dt
 
             player.iso_x = player.iso_x + move_x
             player.iso_y = player.iso_y + move_y
@@ -61,8 +56,8 @@ function love.update(dt)
 end
 
 local function drawCenteredOnTile(image, iso_x, iso_y, extra_y_offset)
-    local x_offset = (tile_width / 2) - (image:getWidth() / 2)
-    local y_offset = tile_height / 3 + (extra_y_offset or 0)
+    local x_offset = (Config.tile_width / 2) - (image:getWidth() / 2)
+    local y_offset = Config.tile_height / 3 + (extra_y_offset or 0)
 
     local draw_x = iso_x + x_offset
     local draw_y = iso_y - y_offset
