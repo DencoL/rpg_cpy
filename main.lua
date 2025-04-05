@@ -31,9 +31,11 @@ function love.load()
     screen_x_center = screen_width / 2
     speed_multiplier = 50
 
-    local player_iso_x, player_iso_y = toIsometric(1, 1, tile_width, tile_height)
+    local player_start_x = 1
+    local player_start_y = 1
+    local player_iso_x, player_iso_y = toIsometric(player_start_x, player_start_y, tile_width, tile_height)
 
-    player = Player(0, 0, player_iso_x, player_iso_y)
+    player = Player(player_start_x, player_start_y, player_iso_x, player_iso_y)
     map = {
         {0, 0, 1, 0, 0},
         {0, 1, 0, 0, 0},
