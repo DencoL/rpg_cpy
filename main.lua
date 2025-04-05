@@ -1,10 +1,9 @@
 --- @class love
 local love = require("love")
+local lume = require("utils.lume")
 
 local Player = require("player")
 
-local tile
-local stone
 local tile_width
 local tile_height
 local screen_width
@@ -13,7 +12,6 @@ local speed_multiplier
 
 local player
 local map
-local STONE_ID = 1
 
 local function toIsometric(x, y, tileWidth, tileHeight)
     local isoX = (x - y) * (tileWidth / 2)
@@ -23,11 +21,8 @@ local function toIsometric(x, y, tileWidth, tileHeight)
 end
 
 function love.load()
-    tile = love.graphics.newImage("assets/tile.png")
-    stone = love.graphics.newImage("assets/stone.png")
-
-    tile_width = tile:getWidth()
-    tile_height = tile:getHeight()
+    tile_width = 92
+    tile_height = 46
     screen_width = love.graphics.getWidth()
     screen_x_center = screen_width / 2
     speed_multiplier = 50
@@ -37,13 +32,8 @@ function love.load()
     local player_iso_x, player_iso_y = toIsometric(player_start_x, player_start_y, tile_width, tile_height)
 
     player = Player(player_start_x, player_start_y, player_iso_x, player_iso_y)
-    map = {
-        {0, 0, STONE_ID, 0, 0},
-        {0, STONE_ID, 0, 0, 0},
-        {0, 0, 0, 0, 0},
-        {STONE_ID, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0},
-    }
+
+    map = lume.deserialize(love.filesystem.read("assets/maps/dummy.txt"))
 end
 
 function love.update(dt)
@@ -72,7 +62,7 @@ end
 
 local function drawCenteredOnTile(image, iso_x, iso_y, extra_y_offset)
     local x_offset = (tile_width / 2) - (image:getWidth() / 2)
-    local y_offset = tile:getHeight() / 3 + (extra_y_offset or 0)
+    local y_offset = tile_height / 3 + (extra_y_offset or 0)
 
     local draw_x = iso_x + x_offset
     local draw_y = iso_y - y_offset
@@ -80,18 +70,32 @@ local function drawCenteredOnTile(image, iso_x, iso_y, extra_y_offset)
     love.graphics.draw(image, draw_x, draw_y)
 end
 
-function love.draw()
-    for x, row in ipairs(map) do
+--- @param values table values to draw
+--- @param draw_func fun(object, iso_x, iso_y)
+local function draw(values, draw_func)
+    for x, row in ipairs(values) do
         for y, column in pairs(row) do
 
             local iso_x, iso_y = toIsometric(y, x, tile_width, tile_height)
-            love.graphics.draw(tile, iso_x, iso_y)
-
-            if column == STONE_ID then
-                drawCenteredOnTile(stone, iso_x, iso_y, -5)
-            end
+            draw_func(column, iso_x, iso_y)
         end
     end
+end
+
+local function getAsset(name)
+    return "assets/" .. name .. ".png"
+end
+
+function love.draw()
+    draw(map.base_tiles, function (column, iso_x, iso_y)
+        love.graphics.draw(love.graphics.newImage(getAsset(column)), iso_x, iso_y)
+    end)
+
+    draw(map.objects, function (column, iso_x, iso_y)
+        if not (column == nil) then
+            drawCenteredOnTile(love.graphics.newImage(getAsset(column.name)), iso_x, iso_y, column.y_offset)
+        end
+    end)
 
     drawCenteredOnTile(player.image, player.iso_x, player.iso_y)
 end
@@ -118,7 +122,7 @@ local function tryMove(key)
         target_y = player.y - 1
     end
 
-    if map[target_y][target_x] == STONE_ID then
+    if not (map.objects[target_y][target_x] == nil) then
         return
     end
 
