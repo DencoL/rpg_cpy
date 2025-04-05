@@ -13,6 +13,7 @@ local speed_multiplier
 
 local player
 local map
+local STONE_ID = 1
 
 local function toIsometric(x, y, tileWidth, tileHeight)
     local isoX = (x - y) * (tileWidth / 2)
@@ -37,10 +38,10 @@ function love.load()
 
     player = Player(player_start_x, player_start_y, player_iso_x, player_iso_y)
     map = {
-        {0, 0, 1, 0, 0},
-        {0, 1, 0, 0, 0},
+        {0, 0, STONE_ID, 0, 0},
+        {0, STONE_ID, 0, 0, 0},
         {0, 0, 0, 0, 0},
-        {1, 0, 0, 0, 0},
+        {STONE_ID, 0, 0, 0, 0},
         {0, 0, 0, 0, 0},
     }
 end
@@ -86,7 +87,7 @@ function love.draw()
             local iso_x, iso_y = toIsometric(y, x, tile_width, tile_height)
             love.graphics.draw(tile, iso_x, iso_y)
 
-            if column == 1 then
+            if column == STONE_ID then
                 drawCenteredOnTile(stone, iso_x, iso_y, -5)
             end
         end
@@ -95,23 +96,43 @@ function love.draw()
     drawCenteredOnTile(player.image, player.iso_x, player.iso_y)
 end
 
+local function isMoveKey(key)
+    return key == "right" or key == "left" or key == "up" or key == "down"
+end
+
+local function tryMove(key)
+    if player.moving then
+        return
+    end
+
+    local target_x = player.x
+    local target_y = player.y
+
+    if key == "left" then
+        target_x = player.x - 1
+    elseif key == "right" then
+        target_x = player.x + 1
+    elseif key == "down" then
+        target_y = player.y + 1
+    elseif key == "up" then
+        target_y = player.y - 1
+    end
+
+    if map[target_y][target_x] == STONE_ID then
+        return
+    end
+
+    player.target_x = target_x
+    player.target_y = target_y
+    player.moving = true
+end
 
 function love.keypressed(key)
     if key == "q" then
         love.event.quit()
     end
 
-    if not player.moving then
-        if love.keyboard.isDown("left") then
-            player.target_x = player.x - 1
-        elseif love.keyboard.isDown("right") then
-            player.target_x = player.x + 1
-        elseif love.keyboard.isDown("down") then
-            player.target_y = player.y + 1
-        elseif love.keyboard.isDown("up") then
-            player.target_y = player.y - 1
-        end
-
-        player.moving = true
+    if isMoveKey(key) then
+        tryMove(key)
     end
 end
