@@ -46,8 +46,6 @@ function love.update(dt)
             player.iso_x = player.iso_x + move_x
             player.iso_y = player.iso_y + move_y
         else
-            player.iso_x = target_iso_x
-            player.iso_y = target_iso_y
             player.x = player.target_x
             player.y = player.target_y
             player.moving = false
