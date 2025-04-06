@@ -71,7 +71,7 @@ local function draw(values, draw_func)
     for x, row in ipairs(values) do
         for y, column in pairs(row) do
 
-            local iso_x, iso_y = toIsometric(y, x, tile_width, tile_height)
+            local iso_x, iso_y = toIsometric(y, x)
             draw_func(column, iso_x, iso_y)
         end
     end
