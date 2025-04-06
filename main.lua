@@ -11,6 +11,9 @@ local screen_x_center
 local player
 local map
 
+--- @param x number x position
+--- @param y number y position
+--- @return number, number # isometric position
 local function toIsometric(x, y)
     local isoX = (x - y) * (Config.tile_width / 2)
     local isoY = (x + y) * (Config.tile_height / 2)
@@ -75,6 +78,8 @@ local function draw(values, draw_func)
     end
 end
 
+--- @param name string name of the asset
+--- @return string # full asset path
 local function getAsset(name)
     return "assets/" .. name .. ".png"
 end
@@ -93,10 +98,15 @@ function love.draw()
     drawCenteredOnTile(player.image, player.iso_x, player.iso_y)
 end
 
+--- @param key love.KeyConstant key pressed
+--- @return boolean # true if move key, false otherwise
 local function isMoveKey(key)
     return key == "right" or key == "left" or key == "up" or key == "down"
 end
 
+--- Checks whether the player can move
+--- Player can move when they did not collide with any object or enemy
+--- @param key love.KeyConstant key pressed
 local function tryMove(key)
     if player.moving then
         return
