@@ -1,9 +1,9 @@
 --- @class love
 local love = require("love")
-local lume = require("utils.lume")
 
 local Player = require("player")
 local Config = require("config")
+local MapLoader = require("maploader")
 
 local screen_width
 local screen_x_center
@@ -28,7 +28,7 @@ function love.load()
 
     player = Player(player_start_x, player_start_y, player_iso_x, player_iso_y)
 
-    map = lume.deserialize(love.filesystem.read("assets/maps/dummy.txt"))
+    map = MapLoader:loadMap("dummy")
 end
 
 function love.update(dt)
